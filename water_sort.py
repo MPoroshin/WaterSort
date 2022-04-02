@@ -1,15 +1,16 @@
-import sys
+import sys, math
 import pygame as pg
 from pygame.color import THECOLORS
 
 pg.init()
 width = 1280
 height = 720
-screen = pg.display.set_mode((width, height),pg.FULLSCREEN)
+
+screen = pg.display.set_mode((width, height))
 pg.display.set_caption('Игра Переливание')
 
-"""pg.mixer.music.load('losing-oneself-55732.mp3')
-pg.mixer.music.play()"""
+pg.mixer.music.load('losing-oneself-55732.mp3')
+pg.mixer.music.play(-1)
 
 class Flasks():
 	"""  x,y - left upper corner  """
@@ -24,21 +25,22 @@ class Flasks():
 
 
 	def Fill_Flasks(self, c):
-		if c == 0:
+		if c == -1:
 			k = 39*4
 			for i in self.flask_list:
-				pg.draw.rect(screen, THECOLORS[i],(self.x+17,self.y+k+25,60,39))
+				pg.draw.rect(screen, THECOLORS[i],(self.x+18,self.y+k+25,58,39))
 				k-=39
 		else:
 			k = 39*4
 			for i in self.flask_list:
-				pg.draw.rect(screen, THECOLORS[i],(self.x+17,self.y+k+25,60,39))
+				if c <= 0: break
+				pg.draw.rect(screen, THECOLORS[i],(self.x+18,self.y+k+25,58,39))
 				k-=39
 				c-=1
-				if c <= 0: break
+				
 
 	def DrawFlask(self):
-		screen.blit(self.Flask,(self.x,self.y))
+		screen.blit(self.Flask,(self.x+17,self.y+13))
 
 	def ButtonFlask(self):
 		global flaskkey
@@ -74,29 +76,29 @@ class Button():
 		else:
 			screen.blit(self.inactive_image,(self.x,self.y))
 
-def Drawlvl(button_back, Button_again, lvl_item, flasks_activity_list, flag,count1):
-
+def Drawlvl(button_back, Button_again, lvl_item, flasks_activity_list, flag):
+	"""false - для анимации, True - для статичной картинки"""
 	screen.fill((71,74,81))
 
 	button_back.DrawButtonAndGetAction()
 	Button_again.DrawButtonAndGetAction()
+	
+
 
 	if flag == False:
 		for i in lvl_item:
 			if (i != flasks_activity_list[0]) and (i != flasks_activity_list[1]):
-				i.Fill_Flasks(0)
+				i.Fill_Flasks(-1)
 			else:
-				if (i == flasks_activity_list[0]):
-					i.Fill_Flasks(len(flasks_activity_list[0].flask_list))
-
 				if (i == flasks_activity_list[1]):
-					if len(flasks_activity_list[1].flask_list)-count1 != 0:
-						i.Fill_Flasks(len(flasks_activity_list[1].flask_list)-count1)
+					i.Fill_Flasks(len(flasks_activity_list[1].flask_list)-1)
+				elif (i == flasks_activity_list[0]):
+					i.Fill_Flasks(len(flasks_activity_list[0].flask_list))
 				
 			i.DrawFlask()
 	else:
 		for i in lvl_item:
-			i.Fill_Flasks(0)
+			i.Fill_Flasks(-1)
 			i.DrawFlask()
 			i.ButtonFlask()
 
@@ -111,138 +113,112 @@ def Drawlvl(button_back, Button_again, lvl_item, flasks_activity_list, flag,coun
 	if len(flasks_activity_list) > 1:
 		screen.blit(Active_flask_button,(flasks_activity_list[1].x_for_circle,flasks_activity_list[1].y_for_circle))
 
-def Animation(pos_fill,count1,color,pos_del,button_back, Button_again, lvl_item, flasks_activity_list):
-	global r
+def Animation(color,pos_del,button_back, Button_again, lvl_item, flasks_activity_list):
+	global key
+
+	dist = abs(flasks_activity_list[0].x - flasks_activity_list[1].x)
+	up_value = (flasks_activity_list[0].y+25+pos_del - flasks_activity_list[0].y)+39 - 15   #на сколько двигать вверх?
+
+	down_value = (5 - len(flasks_activity_list[1].flask_list)     )*39 + 39 + 15#на сколько двигать вниз?
+	pos_fill = -39-15
 
 	k1 = 0
 	k2 = 0
-	k3 = 0
-	k4 = 0
-	j1 = 40
-	j2 = 1
-	j3 = 40
-	j4 = 1
-	kolvo = (39*count1)
 
-	for _ in range(-39,kolvo+40+1):
+
+	for _ in range(1,up_value+1):
 		for event in pg.event.get():
 			if event.type == pg.QUIT:
 				pg.quit()
 				sys.exit()
 
 
-		Drawlvl(button_back, Button_again, lvl_item, flasks_activity_list, False, count1)
-		if _ <= 0:
-			pg.draw.rect(screen, THECOLORS[color],(flasks_activity_list[0].x+17,flasks_activity_list[0].y+25+pos_del+k1,60,39*count1-k1))
-			flasks_activity_list[0].DrawFlask()
-			
-			pg.draw.line(screen,THECOLORS["white"],(flasks_activity_list[0].x+17-10+j3,flasks_activity_list[0].y+25+pos_del+k4-1),(flasks_activity_list[0].x+17+60+10-j3,flasks_activity_list[0].y+25+pos_del+k4-1),2)
-			j3 -= 1
-			pg.time.delay(5)
-		elif _ > kolvo:
-			pg.draw.line(screen,THECOLORS["white"],(flasks_activity_list[0].x+17-10+j4,flasks_activity_list[0].y+25+pos_del+k4-1),(flasks_activity_list[0].x+17+60+10-j4,flasks_activity_list[0].y+25+pos_del+k4-1),2)
-			j4+=1
-			pg.time.delay(5)
-		else:
-			pg.draw.rect(screen, THECOLORS[color],(flasks_activity_list[0].x+17,flasks_activity_list[0].y+25+pos_del+k1,60,39*count1-k1))
-			k1 += 1
-			flasks_activity_list[0].DrawFlask()
-			pg.draw.line(screen,THECOLORS["white"],(flasks_activity_list[0].x+17-10,flasks_activity_list[0].y+25+pos_del+k4-1),(flasks_activity_list[0].x+17+60+10,flasks_activity_list[0].y+25+pos_del+k4-1),2)
-			k4 += 1
-			pg.time.delay(10)
-		pg.display.update()
-
-	for _ in range(-39,kolvo+40+1):
-		for event in pg.event.get():
-			if event.type == pg.QUIT:
-				pg.quit()
-				sys.exit()
-
-		if _ > kolvo:
-			Drawlvl(button_back, Button_again, lvl_item, flasks_activity_list, False, 0)
-		else:
-			Drawlvl(button_back, Button_again, lvl_item, flasks_activity_list, False, count1)
-		if _ <= 0:
-			pg.draw.line(screen,THECOLORS["white"],(flasks_activity_list[1].x+17-10+j1,flasks_activity_list[1].y+25+pos_fill-k3-1),(flasks_activity_list[1].x+17+60+10-j1,flasks_activity_list[1].y+25+pos_fill-k3-1),2)
-			j1 -= 1
-			pg.time.delay(5)
-		elif _ > kolvo:
-			pg.draw.line(screen,THECOLORS["white"],(flasks_activity_list[1].x+17-10+j2,flasks_activity_list[1].y+25+pos_fill-k3-1),(flasks_activity_list[1].x+17+60+10-j2,flasks_activity_list[1].y+25+pos_fill-k3-1),2)
-			j2+=1
-			pg.time.delay(5)
-		else:
-			pg.draw.rect(screen, THECOLORS[color], (flasks_activity_list[1].x+17,flasks_activity_list[1].y+25+pos_fill-k2,60,1+k2))
-			k2 += 1
-			flasks_activity_list[1].DrawFlask()
-			pg.draw.line(screen,THECOLORS["white"],(flasks_activity_list[1].x+17-10,flasks_activity_list[1].y+25+pos_fill-k3-1),(flasks_activity_list[1].x+17+60+10,flasks_activity_list[1].y+25+pos_fill-k3-1),2)
-			k3 += 1
-			pg.time.delay(10)
-		pg.display.update()
+		Drawlvl(button_back, Button_again, lvl_item, flasks_activity_list, False)
+	
 		
+		pg.draw.rect(screen, THECOLORS[color],(flasks_activity_list[0].x+18,flasks_activity_list[0].y+25+pos_del-k1,58,39))
+		k1 += 1
+		flasks_activity_list[0].DrawFlask()
+		if key is not None:
+			break
+		pg.display.update()
+
+	pos_del += 39
+	up_value -= 39
+	k1 = 0
+
+	"""  движение по траектории  """
+	R_vertik = 120
+	R_horiz = dist//2
 
 	
+	if (flasks_activity_list[0].x - flasks_activity_list[1].x) < 0:
+		X0 = flasks_activity_list[0].x + 18 + R_horiz
+		Y0 = flasks_activity_list[0].y - 39
+		a =-3.14
+		while a <= 0.2:
+			for event in pg.event.get():
+				if event.type == pg.QUIT:
+					pg.quit()
+					sys.exit()
+			Drawlvl(button_back, Button_again, lvl_item, flasks_activity_list, False)
+			X = int( ( R_horiz * math.cos(a)  ) + X0)
+			Y = int( ( R_vertik * math.sin(a)  ) + Y0)
+			pg.draw.rect(screen, THECOLORS[color], (X, Y, 58, 39) )
+			a += 0.1
+			pg.time.delay(10)
+			pg.display.update()
+	else:
+		X0 = flasks_activity_list[1].x + 18 + R_horiz
+		Y0 = flasks_activity_list[1].y - 39
+		a =0.2
+		while a >= -3.14:
+			for event in pg.event.get():
+				if event.type == pg.QUIT:
+					pg.quit()
+					sys.exit()
+			Drawlvl(button_back, Button_again, lvl_item, flasks_activity_list, False)
+			X = int( ( R_horiz * math.cos(a) )  + X0)
+			Y = int( ( R_vertik * math.sin(a) )  + Y0)
+			pg.draw.rect(screen, THECOLORS[color], (X, Y, 58, 39) )
+			a -= 0.1
+			pg.time.delay(10)
+			pg.display.update()
+	"""  движение по траектории  """
 
+	for _ in range(1,down_value+1):
+		for event in pg.event.get():
+			if event.type == pg.QUIT:
+				pg.quit()
+				sys.exit()
 
-		
-		"""
-		if _ >= kolvo//2:
-			pg.draw.rect(screen, THECOLORS[color],(flasks_activity_list[1].x+17,flasks_activity_list[1].y+25+pos_fill-k2,60,1+k2))
-			k2 += 1
-		else:
-			pg.draw.rect(screen, THECOLORS[color],(flasks_activity_list[0].x+17,flasks_activity_list[0].y+25+pos_del+k1,60,39*count1-k1))
-			
-			k1 += 1
-			
-		
-
-
+		Drawlvl(button_back, Button_again, lvl_item, flasks_activity_list, False)
 		flasks_activity_list[0].DrawFlask()
+		pg.draw.rect(screen, THECOLORS[color], (flasks_activity_list[1].x+18,flasks_activity_list[1].y+25 + pos_fill + k2,58,39))
+		k2 += 1
 		flasks_activity_list[1].DrawFlask()
+		if key is not None:
+			break
+		pg.display.update()
 
-
-		
-		else:
-			if _ == 1:
-				for j in range(40,0,-1):
-					Drawlvl(button_back, Button_again, lvl_item, flasks_activity_list, False,  count1)
-					pg.draw.line(screen,THECOLORS["white"],(flasks_activity_list[0].x+17-10+j,flasks_activity_list[0].y+25+pos_del+k4),(flasks_activity_list[0].x+17+60+10-j,flasks_activity_list[0].y+25+pos_del+k4),3)
-					pg.display.update()
-					pg.time.delay(50)
-			pg.draw.line(screen,THECOLORS["white"],(flasks_activity_list[0].x+17-10,flasks_activity_list[0].y+25+pos_del+k4),(flasks_activity_list[0].x+17+60+10,flasks_activity_list[0].y+25+pos_del+k4),3)
-			k4 += 1
-			if _ == kolvo//2-1:
-				for j in range(1,41):
-					Drawlvl(button_back, Button_again, lvl_item, flasks_activity_list, False, count1)
-					pg.draw.line(screen,THECOLORS["white"],(flasks_activity_list[0].x+17-10+j,flasks_activity_list[0].y+25+pos_del+k4),(flasks_activity_list[0].x+17+60+10-j,flasks_activity_list[0].y+25+pos_del+k4),3)
-					pg.display.update()
-					pg.time.delay(50)
-					"""
-		
-
-
-		
-		
-
+	down_value -= 39
+	k2 = 0
+			
 def SwapFlasks(button_back, Button_again, lvl_item, flasks_activity_list):
 	i = flasks_activity_list[0].flask_list[-1]
 	pos_del = (39* 5) - (39 *  len(flasks_activity_list[0].flask_list))
 	color = flasks_activity_list[0].flask_list[-1]
-	count1 = 0
-	pos_fill =  (39* 5) - (39 *  len(flasks_activity_list[1].flask_list))
-
 	while (i == flasks_activity_list[0].flask_list[-1]) and (len(flasks_activity_list[1].flask_list) <5):
-		count1+=1
 		flasks_activity_list[1].flask_list.append(flasks_activity_list[0].flask_list[-1])
 		del flasks_activity_list[0].flask_list[-1]
+		Animation(color,pos_del,button_back, Button_again, lvl_item, flasks_activity_list)
 		if len(flasks_activity_list[0].flask_list) == 0:
 			break
-	Animation(pos_fill,count1,color,pos_del,button_back, Button_again, lvl_item, flasks_activity_list)
-
+	
 def lvl(lvl_item,link_on_lvl):
 	screen.fill((71,74,81))
 	pg.display.update()
 	global r, key, run, flaskkey, flasks_activity_list, rotated_image_list
-	
 	button_back = Button(10,10,"level_menu",Button_back_active,Button_back_inactive,150,85)
 	Button_again = Button(width-150,height-710,link_on_lvl,Button_again_active,Button_again_inactive,135,105) #width-135-10, height-(height-10)
 	run = True
@@ -255,10 +231,6 @@ def lvl(lvl_item,link_on_lvl):
 				pg.quit()
 				sys.exit()
 
-		
-
-
-
 		if flaskkey is not None:
 			flasks_activity_list.append(flaskkey)
 			flaskkey = None
@@ -266,7 +238,7 @@ def lvl(lvl_item,link_on_lvl):
 		if (len(flasks_activity_list)>1) and ((len(list(set(flasks_activity_list)))) == 1):
 			flasks_activity_list = []
 
-		Drawlvl(button_back, Button_again, lvl_item, flasks_activity_list, True, 0)
+		Drawlvl(button_back, Button_again, lvl_item, flasks_activity_list, True)
 		
 		if (len(flasks_activity_list) > 1):
 			if (len(flasks_activity_list[0].flask_list) != 0):
@@ -300,14 +272,28 @@ def lvl(lvl_item,link_on_lvl):
 		pg.display.update()
 		pg.time.delay(1)
 
+def Pause_or_Resume():
+	global key
+	global volume_key
+	if volume_key == True:
+		pg.mixer.music.pause()
+		volume_key = False
+	else:
+		pg.mixer.music.unpause()
+		volume_key = True
+	key = None
+
 def Main_Menu():
 	global key
 	global run
+	global volume_key
 	screen.fill((71,74,81))
 	
 	pg.display.update()
 	button_play = Button(width//2-350//2,height//2-350//2+50,"level_menu",Button_play_active,Button_play_inactive,320,120)
 	button_exit = Button(width//2-250//2,height//2-250//2+150,"exit",Button_exit_active,Button_exit_inactive,220,90)
+	button_volume_play = Button(10,10,"volume",Volume_play_active,Volume_play_inactive,150,85)
+	button_volume_pause = Button(10,10,"volume",Volume_pause_active,Volume_pause_inactive,150,85)
 	key = None
 	run = True
 
@@ -317,17 +303,20 @@ def Main_Menu():
 				pg.quit()
 				sys.exit()
 
-		
-
 		screen.fill((71,74,81))
 		button_play.DrawButtonAndGetAction()
 		button_exit.DrawButtonAndGetAction()
 
-
+		if volume_key == True:
+			button_volume_play.DrawButtonAndGetAction()
+		else:
+			button_volume_pause.DrawButtonAndGetAction()
+		if key == "volume":
+			Pause_or_Resume()
 		if key is not None:
 			run = False
 		pg.display.update()
-		pg.time.delay(30)
+		pg.time.delay(10)
 	
 def Levels():
 	global key
@@ -365,32 +354,27 @@ def Levels():
 		pg.display.update()
 		pg.time.delay(30)
 
+
+
+
 """images""" 
 
-rez = (300,300)
+Volume_pause_active = pg.image.load("images/Volume_pause_active.png").convert_alpha()
+Volume_pause_active = pg.transform.scale(Volume_pause_active,(250,250))
+
+Volume_play_active = pg.image.load("images/Volume_play_active.png").convert_alpha()
+Volume_play_active = pg.transform.scale(Volume_play_active,(250,250))
+
+Volume_play_inactive = pg.image.load("images/Volume_play_inactive.png").convert_alpha()
+Volume_play_inactive = pg.transform.scale(Volume_play_inactive,(250,250))
+
+Volume_pause_inactive = pg.image.load("images/Volume_pause_inactive.png").convert_alpha()
+Volume_pause_inactive = pg.transform.scale(Volume_pause_inactive,(250,250))
+
+
+
 Flask = pg.image.load("images/Flask.png").convert_alpha()
-Flask = pg.transform.scale(Flask,rez)
-
-Flask1 = pg.image.load("images/Flask.png").convert_alpha()
-Flask1 = pg.transform.scale(Flask1,rez)
-
-Flask2 = pg.image.load("images/Flask.png").convert_alpha()
-Flask2 = pg.transform.scale(Flask2,rez)
-
-Flask3 = pg.image.load("images/Flask.png").convert_alpha()
-Flask3 = pg.transform.scale(Flask3,rez)
-
-Flask4 = pg.image.load("images/Flask.png").convert_alpha()
-Flask4 = pg.transform.scale(Flask4,rez)
-
-Flask5 = pg.image.load("images/Flask.png").convert_alpha()
-Flask5 = pg.transform.scale(Flask5,rez)
-
-Flask6 = pg.image.load("images/Flask.png").convert_alpha()
-Flask6 = pg.transform.scale(Flask6,rez)
-
-Flask7 = pg.image.load("images/Flask.png").convert_alpha()
-Flask7 = pg.transform.scale(Flask7,rez)
+Flask = pg.transform.scale(Flask,(60,210))
 
 Button_play_inactive = pg.image.load("images/Button_play_inactive.png").convert_alpha()
 Button_play_inactive = pg.transform.scale(Button_play_inactive,(350,350))
@@ -458,56 +442,57 @@ Button_again_inactive = pg.transform.scale(Button_again_inactive,(200,200))
 Win_text = pg.image.load("images/Win_text.png").convert_alpha()
 Win_text = pg.transform.scale(Win_text,(800,800))
 """images"""
+
 run =True
 key = "main"
 flaskkey = None
 flasks_activity_list = []
-r = 0
+volume_key = True
 
-while True:
+while 1:
 	"""lvl1"""
 	link_on_lvl1 = "lvl1"
-	Flasks1_1 = Flasks(width//2-73//2-500//2,320,["green","red","green","red","green"],Flask1)
-	Flasks1_2 = Flasks(width//2-73//2,320,["red","green","red","green","red"],Flask2)
-	Flasks1_3 = Flasks(width//2-73//2+500//2,320,[],Flask3)
-	lvl1 = [Flasks1_1,Flasks1_2,Flasks1_3]       #73  width = 1280 height = 720
+	Flasks1_1 = Flasks(width//2-73//2-500//2,320,["green","red","green","red","green"],Flask)
+	Flasks1_2 = Flasks(width//2-73//2,320,["red","green","red","green","red"],Flask)
+	Flasks1_3 = Flasks(width//2-73//2+500//2,320,[],Flask)
+	lvl1 = [Flasks1_1,Flasks1_2,Flasks1_3]
 
 	"""lvl2"""
 	link_on_lvl2 = "lvl2"
-	Flasks2_1 = Flasks(width//2-73//2-390,320,["orange","orange","red","green","red"],Flask1)
-	Flasks2_2 = Flasks(width//2-73//2-130,320,["green","orange","green","orange","red"],Flask2)
-	Flasks2_3 = Flasks(width//2-73//2+130,320,["green","red","green","orange","red"],Flask3)
-	Flasks2_4 = Flasks(width//2-73//2+390,320,[],Flask4)
+	Flasks2_1 = Flasks(width//2-73//2-390,320,["orange","orange","red","green","red"],Flask)
+	Flasks2_2 = Flasks(width//2-73//2-130,320,["green","orange","green","orange","red"],Flask)
+	Flasks2_3 = Flasks(width//2-73//2+130,320,["green","red","green","orange","red"],Flask)
+	Flasks2_4 = Flasks(width//2-73//2+390,320,[],Flask)
 	lvl2 = [Flasks2_1,Flasks2_2,Flasks2_3,Flasks2_4]
 
 	"""lvl3"""
 	link_on_lvl3 = "lvl3"
-	Flasks3_1 = Flasks(width//2-73//2-400,320,["green","yellow","green","green","red"],Flask1)
-	Flasks3_2 = Flasks(width//2-73//2-200,320,["blue","yellow","red","blue","yellow"],Flask2)
-	Flasks3_3 = Flasks(width//2-73//2,320,["red","blue","blue","red","green"],Flask3)
-	Flasks3_4 = Flasks(width//2-73//2+200,320,["red","yellow","blue","yellow","green"],Flask4)
-	Flasks3_5 = Flasks(width//2-73//2+400,320,[],Flask5)
+	Flasks3_1 = Flasks(width//2-73//2-400,320,["green","yellow","green","green","red"],Flask)
+	Flasks3_2 = Flasks(width//2-73//2-200,320,["blue","yellow","red","blue","yellow"],Flask)
+	Flasks3_3 = Flasks(width//2-73//2,320,["red","blue","blue","red","green"],Flask)
+	Flasks3_4 = Flasks(width//2-73//2+200,320,["red","yellow","blue","yellow","green"],Flask)
+	Flasks3_5 = Flasks(width//2-73//2+400,320,[],Flask)
 	lvl3 = [Flasks3_1,Flasks3_2,Flasks3_3,Flasks3_4,Flasks3_5]
 
 	"""lvl4"""
 	link_on_lvl4 = "lvl4"
-	Flasks4_1 = Flasks(width//2-73//2-415,320,["orange","grey","orange","grey","grey"],Flask1)
-	Flasks4_2 = Flasks(width//2-73//2-250,320,["grey","orange","orange","purple","pink"],Flask2)
-	Flasks4_3 = Flasks(width//2-73//2-85,320,["blue","blue","blue","blue","purple"],Flask3)
-	Flasks4_4 = Flasks(width//2-73//2+85,320,["grey","orange","purple","pink","pink"],Flask4)
-	Flasks4_5 = Flasks(width//2-73//2+250,320,["blue","pink","pink","purple","purple"],Flask5)
-	Flasks4_6 = Flasks(width//2-73//2+415,320,[],Flask6)
+	Flasks4_1 = Flasks(width//2-73//2-415,320,["orange","grey","orange","grey","grey"],Flask)
+	Flasks4_2 = Flasks(width//2-73//2-250,320,["grey","orange","orange","purple","pink"],Flask)
+	Flasks4_3 = Flasks(width//2-73//2-85,320,["blue","blue","blue","blue","purple"],Flask)
+	Flasks4_4 = Flasks(width//2-73//2+85,320,["grey","orange","purple","pink","pink"],Flask)
+	Flasks4_5 = Flasks(width//2-73//2+250,320,["blue","pink","pink","purple","purple"],Flask)
+	Flasks4_6 = Flasks(width//2-73//2+415,320,[],Flask)
 	lvl4 = [Flasks4_1,Flasks4_2,Flasks4_3,Flasks4_4,Flasks4_5,Flasks4_6]
 
 	"""lvl5"""
 	link_on_lvl5 = "lvl5"
-	Flasks5_1 = Flasks(width//2-73//2-450,320,["salmon","khaki","red","red","red"],Flask1)
-	Flasks5_2 = Flasks(width//2-73//2-300,320,["khaki","khaki","red","salmon","salmon"],Flask2)
-	Flasks5_3 = Flasks(width//2-73//2-150,320,["pink","pink","lime","khaki","lime"],Flask3)
-	Flasks5_4 = Flasks(width//2-73//2,320,["lime","yellow","salmon","salmon","khaki"],Flask4)
-	Flasks5_5 = Flasks(width//2-73//2+150,320,["yellow","lime","pink","lime","yellow",],Flask5)
-	Flasks5_6 = Flasks(width//2-73//2+300,320,["pink","yellow","pink","yellow","red"],Flask6)
-	Flasks5_7 = Flasks(width//2-73//2+450,320,[],Flask7)  
+	Flasks5_1 = Flasks(width//2-73//2-450,320,["salmon","khaki","red","red","red"],Flask)
+	Flasks5_2 = Flasks(width//2-73//2-300,320,["khaki","khaki","red","salmon","salmon"],Flask)
+	Flasks5_3 = Flasks(width//2-73//2-150,320,["pink","pink","lime","khaki","lime"],Flask)
+	Flasks5_4 = Flasks(width//2-73//2,320,["lime","yellow","salmon","salmon","khaki"],Flask)
+	Flasks5_5 = Flasks(width//2-73//2+150,320,["yellow","lime","pink","lime","yellow",],Flask)
+	Flasks5_6 = Flasks(width//2-73//2+300,320,["pink","yellow","pink","yellow","red"],Flask)
+	Flasks5_7 = Flasks(width//2-73//2+450,320,[],Flask)  
 	lvl5 = [Flasks5_1,Flasks5_2,Flasks5_3,Flasks5_4,Flasks5_5,Flasks5_6,Flasks5_7]
 
 	if key == "main":
